@@ -110,7 +110,7 @@
   <script>
     const CLIENT_ID = '5de67a25e27d41cdad529947afc6ffc4'; 
     const SCOPES = ['user-read-currently-playing', 'user-read-playback-state'];
-    const REDIRECT_URI = 'http://localhost:3000'; // Adjust if needed
+    const REDIRECT_URI = 'spotify.deathraymind.net'; // Adjust if needed
     const loginUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES.join(' '))}`;
 
     let accessToken = null;
