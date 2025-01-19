@@ -1,246 +1,259 @@
 <!DOCTYPE html>
-<!--browser-sync start --server --files "*.html, *.css"-->
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Now Playing</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .card-header {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .card-title {
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.25rem;
-        }
-
-        .card-content {
-            padding: 20px;
-        }
-
-        .track-info {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .album-art {
-            width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .track-details {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .track-name {
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .artist-name {
-            color: #666;
-            margin: 0;
-        }
-
-        .album-name {
-            color: #888;
-            margin: 0;
-        }
-
-        .button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background-color: #1DB954;
-            color: white;
-            border: none;
-            border-radius: 24px;
-            padding: 12px 24px;
-            font-size: 1rem;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 16px;
-            text-decoration: none;
-            transition: background-color 0.2s;
-        }
-
-        .button:hover {
-            background-color: #1ed760;
-        }
-
-        .nothing-playing {
-            text-align: center;
-            color: #666;
-            padding: 40px 20px;
-        }
-
-        .error-message {
-            color: #dc2626;
-            text-align: center;
-            padding: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spotify Now Playing + Embedded Player</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .card-title {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+    }
+    .card-content {
+      padding: 20px;
+    }
+    .track-info {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .album-art {
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .track-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .track-name {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin: 0;
+    }
+    .artist-name {
+      color: #666;
+      margin: 0;
+    }
+    .album-name {
+      color: #888;
+      margin: 0;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: #1DB954;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 16px;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+    .button:hover {
+      background-color: #1ed760;
+    }
+    .nothing-playing {
+      text-align: center;
+      color: #666;
+      padding: 40px 20px;
+    }
+    .error-message {
+      color: #dc2626;
+      text-align: center;
+      padding: 20px;
+    }
+    /* Added container for the embedded player */
+    .player-embed {
+      margin-top: 16px;
+      width: 100%;
+      /* Adjust the height as needed */
+      height: 80px; 
+    }
+  </style>
 </head>
 <body>
-    <div class="card" id="main-container"></div>
+  <div class="card" id="main-container"></div>
 
-    <script>
-        const CLIENT_ID = '5de67a25e27d41cdad529947afc6ffc4'; // Remember to keep this secure in production
-        const SCOPES = ['user-read-currently-playing', 'user-read-playback-state'];
-        const REDIRECT_URI = 'http://localhost:3000';
-        const loginUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES.join(' '))}`;
+  <script>
+    const CLIENT_ID = '5de67a25e27d41cdad529947afc6ffc4'; 
+    const SCOPES = ['user-read-currently-playing', 'user-read-playback-state'];
+    const REDIRECT_URI = 'http://localhost:3000'; // Adjust if needed
+    const loginUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES.join(' '))}`;
 
-        let accessToken = null;
+    let accessToken = null;
 
-        function showLoginButton() {
-            document.getElementById('main-container').innerHTML = `
-                <div class="card-content">
-                    <a href="${loginUrl}" class="button">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18V5l12-2v13"></path>
-                            <circle cx="6" cy="18" r="3"></circle>
-                            <circle cx="18" cy="16" r="3"></circle>
-                        </svg>
-                        Connect Spotify
-                    </a>
-                </div>
-            `;
+    function showLoginButton() {
+      document.getElementById('main-container').innerHTML = `
+        <div class="card-content">
+          <a href="${loginUrl}" class="button">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            Connect Spotify
+          </a>
+        </div>
+      `;
+    }
+
+    function showError(message) {
+      document.getElementById('main-container').innerHTML = `
+        <div class="error-message">${message}</div>
+      `;
+    }
+
+    function showTrack(track) {
+      if (!track || !track.item) {
+        document.getElementById('main-container').innerHTML = `
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+              Now Playing
+            </h2>
+          </div>
+          <div class="nothing-playing">
+            Nothing playing right now
+          </div>
+        `;
+        return;
+      }
+
+      const albumArt = track.item.album.images && track.item.album.images.length
+        ? `<img src="${track.item.album.images[0].url}" alt="${track.item.album.name}" class="album-art">`
+        : '';
+
+      const trackName = track.item.name;
+      const artistNames = track.item.artists.map(artist => artist.name).join(', ');
+      const albumName = track.item.album.name;
+      const trackUrl = track.item.external_urls.spotify;
+
+      // We'll create an iframe for the embed
+      // track.item.id is the Spotify Track ID we need for the embed
+      const trackId = track.item.id;
+
+      document.getElementById('main-container').innerHTML = `
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            Now Playing
+          </h2>
+        </div>
+        <div class="card-content">
+          <div class="track-info">
+            ${albumArt}
+            <div class="track-details">
+              <h3 class="track-name">${trackName}</h3>
+              <p class="artist-name">${artistNames}</p>
+              <p class="album-name">${albumName}</p>
+              <a href="${trackUrl}" target="_blank" class="button">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Listen on Spotify
+              </a>
+            </div>
+            <!-- Embed the Spotify player for this track -->
+            <iframe
+              class="player-embed"
+              src="https://open.spotify.com/embed/track/${trackId}"
+              frameborder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+      `;
+    }
+
+    async function fetchCurrentTrack() {
+      try {
+        const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+
+        if (response.status === 204) {
+          showTrack(null);
+          return;
         }
 
-        function showError(message) {
-            document.getElementById('main-container').innerHTML = `
-                <div class="error-message">${message}</div>
-            `;
+        if (!response.ok) {
+          throw new Error('Failed to fetch current track');
         }
 
-        function showTrack(track) {
-            if (!track) {
-                document.getElementById('main-container').innerHTML = `
-                    <div class="card-header">
-                        <h2 class="card-title">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18V5l12-2v13"></path>
-                                <circle cx="6" cy="18" r="3"></circle>
-                                <circle cx="18" cy="16" r="3"></circle>
-                            </svg>
-                            Now Playing
-                        </h2>
-                    </div>
-                    <div class="nothing-playing">
-                        Nothing playing right now
-                    </div>
-                `;
-                return;
-            }
+        const data = await response.json();
+        showTrack(data);
+      } catch (err) {
+        console.error('Error fetching current track:', err);
+        showError('Failed to fetch current track');
+      }
+    }
 
-            document.getElementById('main-container').innerHTML = `
-                <div class="card-header">
-                    <h2 class="card-title">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18V5l12-2v13"></path>
-                            <circle cx="6" cy="18" r="3"></circle>
-                            <circle cx="18" cy="16" r="3"></circle>
-                        </svg>
-                        Now Playing
-                    </h2>
-                </div>
-                <div class="card-content">
-                    <div class="track-info">
-                        ${track.item.album.images[0] ? 
-                            `<img src="${track.item.album.images[0].url}" alt="${track.item.album.name}" class="album-art">` 
-                            : ''}
-                        <div class="track-details">
-                            <h3 class="track-name">${track.item.name}</h3>
-                            <p class="artist-name">${track.item.artists.map(artist => artist.name).join(', ')}</p>
-                            <p class="album-name">${track.item.album.name}</p>
-                            <a href="${track.item.external_urls.spotify}" target="_blank" class="button">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                Listen on Spotify
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        async function fetchCurrentTrack() {
-            try {
-                const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
-                });
-
-                if (response.status === 204) {
-                    showTrack(null);
-                    return;
-                }
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch current track');
-                }
-
-                const data = await response.json();
-                showTrack(data);
-            } catch (err) {
-                console.error('Error fetching current track:', err);
-                showError('Failed to fetch current track');
-            }
-        }
-
-        // Check for token in URL hash on load
-window.onload = () => {
-    const hash = window.location.hash
+    // On page load, check if we have a token in the hash
+    window.onload = () => {
+      const hash = window.location.hash
         .substring(1)
         .split('&')
         .reduce((initial, item) => {
-            const parts = item.split('=');
-            initial[parts[0]] = decodeURIComponent(parts[1]);
-            return initial;
+          const parts = item.split('=');
+          initial[parts[0]] = decodeURIComponent(parts[1]);
+          return initial;
         }, {});
 
-    if (hash.access_token) {
+      if (hash.access_token) {
         accessToken = hash.access_token;
-        window.location.hash = ''; // Clear the fragment from the URL
+        window.location.hash = '';
         fetchCurrentTrack();
-        setInterval(fetchCurrentTrack, 5000); // Refresh the track info every 5 seconds
-    } else {
+        // Refresh the track info every 5 seconds (adjust as you like)
+        setInterval(fetchCurrentTrack, 5000);
+      } else {
         showLoginButton();
-    }
-}; 
-    </script>
+      }
+    };
+  </script>
 </body>
 </html>
+
